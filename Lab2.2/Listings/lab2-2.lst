@@ -1,0 +1,222 @@
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/28/2022 16:18:19 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN .\Objects\lab2-2.obj
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE lab2-2.a51 SET(SMALL) DEBUG PRINT(.\Listings\lab2-2.lst) OBJECT(.\Objec
+                      ts\lab2-2.obj) EP
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     ;
+                       2     ;File:          Lab2-2.a51
+                       3     ;Class:         ECEN332
+                       4     ;Created:       09/23/2022
+                       5     ;Auth:          Patrick Cash
+                       6     ;
+                       7     
+                       8     ;--------- SETUP ---------
+                       9     ;setup origin
+0300                  10                     org 300H
+0300 32303230         11     MYDATA:                 DB '2020', 00H
+0304 00                      
+                      12     
+0000                  13                     org 0
+  0000                14     OPERAND_1               equ 00H
+  0001                15     RAM                             equ 01H
+  0002                16     OPERAND_2               equ 02H
+  0003                17     QUOTIENT                equ     03H
+  0004                18     DIVISOR                 equ 04H
+  0005                19     MULTIPLIER              equ 05H
+  0006                20     NIBBLE                  equ 06H
+  0007                21     RESULT                  equ 07H
+                      22             
+0000 7400             23                     mov A, #00H
+0002 900300           24                     mov DPTR, #MYDATA
+0005 750140           25                     mov RAM, #40H
+                      26     
+                      27     ;--------- MAIN ---------
+                      28     ;THIS TAKES CHAR STRING '2020'
+                      29     ;FROM PROG MEM CONVERTS TO
+                      30     ;PACKED BCD, MOVES IT TO 40H IN RAM
+                      31                     
+0008                  32     BEGIN:  
+                      33                     ;test SUB_BCD
+0008 750099           34                     mov OPERAND_1, #99H
+000B 750233           35                     mov OPERAND_2, #33H
+000E 1158             36                     acall SUB_BCD
+0010 850700           37                     mov OPERAND_1, RESULT
+0013 750233           38                     mov OPERAND_2, #33H
+0016 1158             39                     acall SUB_BCD
+0018 850700           40                     mov OPERAND_1, RESULT
+001B 750233           41                     mov OPERAND_2, #33H
+001E 1158             42                     acall SUB_BCD
+                      43                     
+0020 E4               44                     clr A
+0021 93               45                     movc A, @A+DPTR
+0022 6009             46                     jz HERE
+                      47                     
+0024 118E             48                     acall CONVERT_BCD
+0026 E507             49                     mov A, RESULT
+0028 F7               50                     mov @R1, A
+0029 09               51                     inc R1
+002A A3               52                     inc DPTR
+002B 80DB             53                     sjmp BEGIN
+                      54                     
+002D 80FE             55     HERE:   sjmp HERE
+                      56     
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/28/2022 16:18:19 PAGE     2
+
+                      57     ;--------- SUBROUTINES ---------
+002F                  58     ADD_BCD:
+                      59                     ;setup
+002F C000             60                     push OPERAND_1
+0031 C002             61                     push OPERAND_2
+                      62                     
+                      63                     ;split lows off
+0033 E500             64                     mov A, OPERAND_1
+0035 540F             65                     anl A, #0FH
+0037 F506             66                     mov NIBBLE, A
+0039 E502             67                     mov A, OPERAND_2
+003B 540F             68                     anl A, #0FH
+                      69                     
+                      70                     ;add low nibbles
+003D 2506             71                     add A, NIBBLE
+                      72                     ;if result > 0000 1001, +0000 0110 +1 to high nibble
+003F D4               73                     da A
+0040 F507             74                     mov RESULT, A
+                      75     
+                      76                     ;split highs
+0042 E500             77                     mov A, OPERAND_1
+0044 54F0             78                     anl A, #0F0H
+0046 F506             79                     mov NIBBLE, A
+0048 E502             80                     mov A, OPERAND_2
+004A 54F0             81                     anl A, #0F0H
+                      82                     
+                      83                     ;add high nibbles +aux carry
+004C 2506             84                     add A, NIBBLE
+                      85                     ;if result > 1001 0000, +0110 0000
+004E D4               86                     da A
+004F 2507             87                     add A, RESULT
+0051 F507             88                     mov RESULT, A
+                      89                     
+0053 D002             90                     pop OPERAND_2
+0055 D000             91                     pop OPERAND_1
+0057 22               92                     ret
+                      93     
+                      94     ;receives: OPERAND_1 as minued and OPERAND_2 as subtrahend
+                      95     ;stores: in RESULT
+                      96     ;uses: NIBBLE
+0058                  97     SUB_BCD:
+0058 C000             98                     push OPERAND_1
+005A C002             99                     push OPERAND_2
+005C C006            100                     push NIBBLE
+                     101                     
+                     102                     ;add 1s compliment subtrahend to minuend
+005E E502            103                     mov A, OPERAND_2
+0060 F4              104                     cpl A
+0061 3500            105                     addc A, OPERAND_1
+                     106                     
+                     107                     ;checks if carry flag, wraps around
+0063 5002            108                     jnc SKIP
+0065 2401            109                     add A, #1
+                     110                     
+0067 F507            111     SKIP:   mov RESULT, A
+                     112                     ;does something
+                     113     
+0069 D006            114                     pop NIBBLE
+006B D002            115                     pop OPERAND_2
+006D D000            116                     pop OPERAND_1
+006F 22              117                     ret
+                     118     
+0070                 119     DIV_BCD:
+                     120     
+0070 1158            121                     acall SUB_BCD
+0072 D504FB          122                     djnz DIVISOR, DIV_BCD
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/28/2022 16:18:19 PAGE     3
+
+0075 22              123                     ret
+                     124     
+                     125     ;receives: OPERAND_1 and adds it to itself MULTIPLIER times
+                     126     ;stores: in RESULT
+                     127     ;uses: OPERAND_2, NIBBLE
+0076                 128     MUL_BCD:
+0076 C006            129                     push NIBBLE
+0078 C002            130                     push OPERAND_2
+007A 750200          131                     mov OPERAND_2, #0
+007D 750700          132                     mov RESULT, #0
+0080                 133     LOOP_MUL:
+0080 E507            134                     mov A, RESULT
+0082 F502            135                     mov OPERAND_2, A
+0084 112F            136                     acall ADD_BCD
+0086 D505F7          137                     djnz MULTIPLIER, LOOP_MUL
+0089 D002            138                     pop OPERAND_2
+008B D006            139                     pop NIBBLE
+008D 22              140                     ret
+                     141     
+008E                 142     CONVERT_BCD:
+                     143                     ;split high/low
+                     144                     ;swap high to low
+                     145                     ;use high as multipler for MUL_BCD
+008E C4              146                     swap A
+008F F505            147                     mov MULTIPLIER, A
+0091 53050F          148                     anl MULTIPLIER, #0FH
+                     149                     
+                     150                     ;push low nibble aside
+0094 C4              151                     swap A
+0095 540F            152                     anl A, #0FH
+0097 F507            153                     mov RESULT, A
+0099 C007            154                     push RESULT
+                     155                     
+                     156                     ;MUL_BCD 16 X high nibble
+009B 750016          157                     mov OPERAND_1, #16H
+009E 750200          158                     mov OPERAND_2, #00H
+00A1 E4              159                     clr A
+00A2 1176            160                     acall MUL_BCD
+                     161                     
+                     162                     ;pop low nibble back,
+                     163                     ;adjust nibble
+                     164                     ;ADD_BCD low and converted
+00A4 D006            165                     pop NIBBLE
+00A6 E506            166                     mov A, NIBBLE
+00A8 D4              167                     da A
+00A9 F502            168                     mov OPERAND_2, A
+00AB 850700          169                     mov OPERAND_1, RESULT
+00AE 112F            170                     acall ADD_BCD
+                     171                     
+                     172                     ;print result
+00B0 22              173                     ret
+                     174     
+                     175     end
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/28/2022 16:18:19 PAGE     4
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+ADD_BCD. . . . . .  C ADDR   002FH   A   
+BEGIN. . . . . . .  C ADDR   0008H   A   
+CONVERT_BCD. . . .  C ADDR   008EH   A   
+DIVISOR. . . . . .  N NUMB   0004H   A   
+DIV_BCD. . . . . .  C ADDR   0070H   A   
+HERE . . . . . . .  C ADDR   002DH   A   
+LOOP_MUL . . . . .  C ADDR   0080H   A   
+MULTIPLIER . . . .  N NUMB   0005H   A   
+MUL_BCD. . . . . .  C ADDR   0076H   A   
+MYDATA . . . . . .  C ADDR   0300H   A   
+NIBBLE . . . . . .  N NUMB   0006H   A   
+OPERAND_1. . . . .  N NUMB   0000H   A   
+OPERAND_2. . . . .  N NUMB   0002H   A   
+QUOTIENT . . . . .  N NUMB   0003H   A   
+RAM. . . . . . . .  N NUMB   0001H   A   
+RESULT . . . . . .  N NUMB   0007H   A   
+SKIP . . . . . . .  C ADDR   0067H   A   
+SUB_BCD. . . . . .  C ADDR   0058H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)
