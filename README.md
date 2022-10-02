@@ -1,15 +1,14 @@
 # Assembly-8051
-<list>
+This is code for Lab Project two for ECEN332-UNO/UNL. This is for the 8051 legacy MCU and simulated/tested on DS89C450 with OPTREX Dot Matrix LCD. 
 <code>
 git clone
-  </code>
- <code>
+</code>
+<code>
 git add .
-  </code>
-  <code>
+</code>
+<code>
 git commit -m "<Message>"
-    </code>
-    <code>
+</code>
+<code>
 git push
 </code>
-</list>
