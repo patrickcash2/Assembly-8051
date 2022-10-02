@@ -1,7 +1,7 @@
 # Assembly-8051
 <code>
-git clone
-git add .
-git commit -m "<Message>"
-git push
+git clone\n
+git add .\n
+git commit -m "<Message>"\n
+git push\n
 </code>
