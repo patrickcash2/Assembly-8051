@@ -1,0 +1,193 @@
+A51 MACRO ASSEMBLER  LAB2                                                                 09/30/2022 11:02:59 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN .\Objects\lab2.obj
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE lab2.a51 SET(SMALL) DEBUG PRINT(.\Listings\lab2.lst) OBJECT(.\Objects\l
+                      ab2.obj) EP
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     ;
+                       2     ;File:          Lab2.a51
+                       3     ;Class:         ECEN332
+                       4     ;Created:       09/23/2022
+                       5     ;Auth:          Patrick Cash
+                       6     ;
+                       7     
+                       8     ;--------- SETUP ---------
+                       9     ;setup origin
+0000                  10                     org 0
+                      11     
+                      12     ;start by setting stack to 50H, lots of room for activities
+0000 758150           13     START:  mov SP, #50H
+                      14     
+                      15                     ;initialize OPTREX Dot Matrix LCD
+0003 1149             16                     acall INIT_PORTS
+0005 112A             17                     acall INIT_LCD
+                      18     
+                      19     ;--------- MAIN ---------
+                      20     ;this is the main section that sends
+                      21     ;lab number and name to LCD then loops
+                      22     ;LCD data lines: port 1
+                      23     ;LCD control lines: port 3
+0007 900015           24                     mov DPTR, #TXT
+000A 1150             25                     acall PUTSTRING
+000C 1167             26                     acall PUT_CRLF
+000E 90001D           27                     mov DPTR, #MYNAME
+0011 1150             28                     acall PUTSTRING
+0013 80FE             29     HERE:   sjmp HERE
+                      30                     
+0015 4C616220         31     TXT:    DB 'Lab 2.1', 00H
+0019 322E3100                
+001D 50617472         32     MYNAME: DB 'Patrick Cash', 00H
+0021 69636B20                
+0025 43617368                
+0029 00                      
+                      33     
+                      34     
+                      35     ;--------- SUBROUTINES ---------
+002A                  36     INIT_LCD:
+                      37                     ;LCD, 2 lines, 5x7 matrix
+002A 7438             38                     mov A, #38H
+002C 116C             39                     acall COMNWRT
+002E 1179             40                     acall DELAY
+                      41                     
+                      42                     ;display on, cursor on
+0030 740E             43                     mov A, #0EH
+0032 116C             44                     acall COMNWRT
+0034 1179             45                     acall DELAY
+                      46                     
+                      47                     ;clear LCD
+0036 7401             48                     mov A, #01H
+0038 116C             49                     acall COMNWRT
+003A 1179             50                     acall DELAY
+                      51                     
+                      52                     ;shift cursor right
+003C 7406             53                     mov A, #06H
+A51 MACRO ASSEMBLER  LAB2                                                                 09/30/2022 11:02:59 PAGE     2
+
+003E 116C             54                     acall COMNWRT
+0040 1179             55                     acall DELAY
+                      56                     
+                      57                     ;cursor at line 1 position 4
+0042 7484             58                     mov A, #84H
+0044 116C             59                     acall COMNWRT
+0046 1179             60                     acall DELAY
+0048 22               61                     ret
+                      62     
+0049                  63     INIT_PORTS:
+                      64                     ;safe to assume already clr, but just in case
+0049 75B000           65                     mov P3, #0
+004C 759000           66                     mov P1, #0
+004F 22               67                     ret
+                      68     
+0050                  69     PUTSTRING:
+                      70                     ;pull value from program memory
+0050 E4               71                     clr A
+0051 93               72                     movc A, @A+DPTR
+                      73                     
+                      74                     ;exit subroutine when zero char found
+0052 6005             75                     jz EXIT1
+                      76                     
+                      77                     ;send a single char to LCD, increment ptr
+0054 115A             78                     acall PUTCHAR
+0056 A3               79                     inc DPTR
+0057 80F7             80                     sjmp PUTSTRING
+0059 22               81     EXIT1:  ret
+                      82                     
+005A                  83     PUTCHAR:
+                      84                     ;send accum to port 1
+005A F590             85                     mov P1, A               ;data
+                      86                     
+                      87                     ;send data and write
+005C D2B0             88                     setb P3.0               ;RS for data
+005E C2B1             89                     clr P3.1                ;R/W for write
+                      90                     
+                      91                     ;pulse E high, return
+0060 D2B2             92                     setb P3.2               ;E high pulse
+0062 1179             93                     acall DELAY
+0064 C2B2             94                     clr P3.2                ;E high to low
+0066 22               95                     ret
+                      96     
+                      97     ;carriage return, line feed ASCII
+  00C0                98     CR              EQU 0C0H
+  000A                99     LF              EQU 0AH
+                     100     
+0067                 101     PUT_CRLF:
+                     102                     ;send to accum, call putchar
+0067 74C0            103                     mov A, #0C0H
+0069 116C            104                     acall COMNWRT
+                     105                     ;mov A, LF
+                     106                     ;acall COMNWRT
+006B 22              107                     ret
+                     108     
+006C                 109     COMNWRT:
+                     110                     ;send accum to port 1
+006C F590            111                     mov P1, A       ;data
+                     112                     
+                     113                     ;send cmd and write
+006E C2B0            114                     clr P3.0        ;R/S for command
+0070 C2B1            115                     clr P3.1        ;R/W for write
+                     116                     
+                     117                     ;pulse E high, return
+0072 D2B2            118                     setb P3.2       ;E for pulse high
+0074 1179            119                     acall DELAY
+A51 MACRO ASSEMBLER  LAB2                                                                 09/30/2022 11:02:59 PAGE     3
+
+0076 C2B2            120                     clr P3.2        ;E for pulse high
+0078 22              121                     ret
+                     122                     
+                     123     ;freq = 11MHz => T = 91.0ns
+                     124     ;255 * 50 * mc
+                     125     ;mc = 12 * clks
+                     126     ;t = 91 * 255 * 50 * 12 * clks ns = 13.9 * clks ms
+0079                 127     DELAY:
+                     128                     ;free up regs 3,4 for use
+0079 C003            129                     push 3
+007B C004            130                     push 4
+                     131                     
+                     132                     ;255 * 50 * mc * 1/f
+007D 7B32            133                     mov R3, #50
+007F 7CFF            134     HERE2:  mov R4, #255
+0081 DCFE            135     HERE1:  djnz R4, HERE1
+0083 DBFA            136                     djnz R3, HERE2
+                     137                     
+                     138                     ;restore stack, return
+0085 D004            139                     pop 4
+0087 D003            140                     pop 3
+0089 22              141                     ret
+                     142     end
+A51 MACRO ASSEMBLER  LAB2                                                                 09/30/2022 11:02:59 PAGE     4
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+COMNWRT. . . . . .  C ADDR   006CH   A   
+CR . . . . . . . .  N NUMB   00C0H   A   
+DELAY. . . . . . .  C ADDR   0079H   A   
+EXIT1. . . . . . .  C ADDR   0059H   A   
+HERE . . . . . . .  C ADDR   0013H   A   
+HERE1. . . . . . .  C ADDR   0081H   A   
+HERE2. . . . . . .  C ADDR   007FH   A   
+INIT_LCD . . . . .  C ADDR   002AH   A   
+INIT_PORTS . . . .  C ADDR   0049H   A   
+LF . . . . . . . .  N NUMB   000AH   A   
+MYNAME . . . . . .  C ADDR   001DH   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+P3 . . . . . . . .  D ADDR   00B0H   A   
+PUTCHAR. . . . . .  C ADDR   005AH   A   
+PUTSTRING. . . . .  C ADDR   0050H   A   
+PUT_CRLF . . . . .  C ADDR   0067H   A   
+SP . . . . . . . .  D ADDR   0081H   A   
+START. . . . . . .  C ADDR   0000H   A   
+TXT. . . . . . . .  C ADDR   0015H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)
