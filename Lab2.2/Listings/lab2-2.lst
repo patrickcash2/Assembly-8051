@@ -1,4 +1,4 @@
-A51 MACRO ASSEMBLER  LAB2_2                                                               09/28/2022 16:18:19 PAGE     1
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/30/2022 08:02:31 PAGE     1
 
 
 MACRO ASSEMBLER A51 V8.2.7.0
@@ -17,178 +17,281 @@ LOC  OBJ            LINE     SOURCE
                        7     
                        8     ;--------- SETUP ---------
                        9     ;setup origin
-0300                  10                     org 300H
-0300 32303230         11     MYDATA:                 DB '2020', 00H
-0304 00                      
-                      12     
-0000                  13                     org 0
-  0000                14     OPERAND_1               equ 00H
-  0001                15     RAM                             equ 01H
-  0002                16     OPERAND_2               equ 02H
-  0003                17     QUOTIENT                equ     03H
-  0004                18     DIVISOR                 equ 04H
-  0005                19     MULTIPLIER              equ 05H
-  0006                20     NIBBLE                  equ 06H
-  0007                21     RESULT                  equ 07H
-                      22             
-0000 7400             23                     mov A, #00H
-0002 900300           24                     mov DPTR, #MYDATA
-0005 750140           25                     mov RAM, #40H
-                      26     
-                      27     ;--------- MAIN ---------
-                      28     ;THIS TAKES CHAR STRING '2020'
-                      29     ;FROM PROG MEM CONVERTS TO
-                      30     ;PACKED BCD, MOVES IT TO 40H IN RAM
-                      31                     
-0008                  32     BEGIN:  
-                      33                     ;test SUB_BCD
-0008 750099           34                     mov OPERAND_1, #99H
-000B 750233           35                     mov OPERAND_2, #33H
-000E 1158             36                     acall SUB_BCD
-0010 850700           37                     mov OPERAND_1, RESULT
-0013 750233           38                     mov OPERAND_2, #33H
-0016 1158             39                     acall SUB_BCD
-0018 850700           40                     mov OPERAND_1, RESULT
-001B 750233           41                     mov OPERAND_2, #33H
-001E 1158             42                     acall SUB_BCD
-                      43                     
-0020 E4               44                     clr A
-0021 93               45                     movc A, @A+DPTR
-0022 6009             46                     jz HERE
-                      47                     
-0024 118E             48                     acall CONVERT_BCD
-0026 E507             49                     mov A, RESULT
-0028 F7               50                     mov @R1, A
-0029 09               51                     inc R1
-002A A3               52                     inc DPTR
-002B 80DB             53                     sjmp BEGIN
-                      54                     
-002D 80FE             55     HERE:   sjmp HERE
-                      56     
-A51 MACRO ASSEMBLER  LAB2_2                                                               09/28/2022 16:18:19 PAGE     2
+0120                  10                     org 120H
+0120 32303230         11     MYDATA:                 DB '2020', 00H
+0124 00                      
+0150                  12                     org 150H
+0150 42586429         13     MYBCD:                  DB 42H, 58H, 64H, 29H, 00H
+0154 00                      
+0180                  14                     org 180H
+0180 38393437         15     MYAVG:                  DB '8','9','4','7','6','2','5'
+0184 363235                  
+0000                  16                     org 0
+  0000                17     OPERAND_1               equ 00H
+  0001                18     RAM                             equ 01H
+  0002                19     OPERAND_2               equ 02H
+  0003                20     QUOTIENT                equ     03H
+  0004                21     REMAINDER               equ 04H
+  0005                22     MULTIPLIER              equ 05H
+  0006                23     NIBBLE                  equ 06H
+  0007                24     RESULT                  equ 07H
+                      25     
+0000 7400             26                     mov A, #00H
+0002 900120           27                     mov DPTR, #MYDATA
+0005 750140           28                     mov RAM, #40H
+                      29     
+                      30     ;--------- MAIN ---------
+                      31     ;THIS TAKES CHAR STRING '2020'
+                      32     ;FROM PROG MEM CONVERTS TO
+                      33     ;PACKED BCD, MOVES IT TO 40H IN RAM     
+                      34     
+0008                  35     PART_ONE:
+0008 E4               36                     clr A
+0009 93               37                     movc A, @A+DPTR
+000A 6009             38                     jz PART_TWO
+                      39     
+000C 11D9             40                     acall CONVERT_BCD
+000E E507             41                     mov A, RESULT
+0010 F7               42                     mov @R1, A
+0011 09               43                     inc R1
+0012 A3               44                     inc DPTR
+0013 80F3             45                     sjmp PART_ONE
+                      46     
+0015                  47     PART_TWO:
+0015 750150           48                     mov RAM, #50H
+0018 900150           49                     mov DPTR, #MYBCD
+                      50                     
+001B 80FE             51     LP_TWO: sjmp LP_TWO
+001D E4               52                     clr A
+001E 93               53                     movc A, @A+DPTR
+001F 6009             54                     jz PART_THREE
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/30/2022 08:02:31 PAGE     2
 
-                      57     ;--------- SUBROUTINES ---------
-002F                  58     ADD_BCD:
-                      59                     ;setup
-002F C000             60                     push OPERAND_1
-0031 C002             61                     push OPERAND_2
+                      55                     
+0021 11FC             56                     acall CONVERT_HEX
+0023 E507             57                     mov A, RESULT
+0025 F7               58                     mov @R1, A
+0026 09               59                     inc R1
+0027 A3               60                     inc DPTR
+0028 80F1             61                     sjmp LP_TWO
                       62                     
-                      63                     ;split lows off
-0033 E500             64                     mov A, OPERAND_1
-0035 540F             65                     anl A, #0FH
-0037 F506             66                     mov NIBBLE, A
-0039 E502             67                     mov A, OPERAND_2
-003B 540F             68                     anl A, #0FH
-                      69                     
-                      70                     ;add low nibbles
-003D 2506             71                     add A, NIBBLE
-                      72                     ;if result > 0000 1001, +0000 0110 +1 to high nibble
-003F D4               73                     da A
-0040 F507             74                     mov RESULT, A
-                      75     
-                      76                     ;split highs
-0042 E500             77                     mov A, OPERAND_1
-0044 54F0             78                     anl A, #0F0H
-0046 F506             79                     mov NIBBLE, A
-0048 E502             80                     mov A, OPERAND_2
-004A 54F0             81                     anl A, #0F0H
-                      82                     
-                      83                     ;add high nibbles +aux carry
-004C 2506             84                     add A, NIBBLE
-                      85                     ;if result > 1001 0000, +0110 0000
-004E D4               86                     da A
-004F 2507             87                     add A, RESULT
-0051 F507             88                     mov RESULT, A
-                      89                     
-0053 D002             90                     pop OPERAND_2
-0055 D000             91                     pop OPERAND_1
-0057 22               92                     ret
+002A                  63     PART_THREE:
+                      64                     
+                      65                     
+002A 80FE             66     HERE:   sjmp HERE
+                      67     
+                      68     ;--------- SUBROUTINES ---------
+002C                  69     ADD_BCD:
+002C C000             70                     push OPERAND_1
+002E C002             71                     push OPERAND_2
+0030 C006             72                     push NIBBLE
+                      73     
+                      74                     ;split lows off
+0032 E500             75                     mov A, OPERAND_1
+0034 540F             76                     anl A, #0FH
+0036 F506             77                     mov NIBBLE, A
+0038 E502             78                     mov A, OPERAND_2
+003A 540F             79                     anl A, #0FH
+                      80     
+                      81                     ;add low nibbles together
+003C 2506             82                     add A, NIBBLE
+                      83                     ;if result > 0000 1001, +0000 0110 +1 to high nibble
+003E D4               84                     da A
+003F F507             85                     mov RESULT, A
+                      86     
+                      87                     ;split highs
+0041 E500             88                     mov A, OPERAND_1
+0043 54F0             89                     anl A, #0F0H
+0045 F506             90                     mov NIBBLE, A
+0047 E502             91                     mov A, OPERAND_2
+0049 54F0             92                     anl A, #0F0H
                       93     
-                      94     ;receives: OPERAND_1 as minued and OPERAND_2 as subtrahend
-                      95     ;stores: in RESULT
-                      96     ;uses: NIBBLE
-0058                  97     SUB_BCD:
-0058 C000             98                     push OPERAND_1
-005A C002             99                     push OPERAND_2
-005C C006            100                     push NIBBLE
-                     101                     
-                     102                     ;add 1s compliment subtrahend to minuend
-005E E502            103                     mov A, OPERAND_2
-0060 F4              104                     cpl A
-0061 3500            105                     addc A, OPERAND_1
-                     106                     
-                     107                     ;checks if carry flag, wraps around
-0063 5002            108                     jnc SKIP
-0065 2401            109                     add A, #1
-                     110                     
-0067 F507            111     SKIP:   mov RESULT, A
-                     112                     ;does something
-                     113     
-0069 D006            114                     pop NIBBLE
-006B D002            115                     pop OPERAND_2
-006D D000            116                     pop OPERAND_1
-006F 22              117                     ret
-                     118     
-0070                 119     DIV_BCD:
-                     120     
-0070 1158            121                     acall SUB_BCD
-0072 D504FB          122                     djnz DIVISOR, DIV_BCD
-A51 MACRO ASSEMBLER  LAB2_2                                                               09/28/2022 16:18:19 PAGE     3
+                      94                     ;add high nibbles+
+004B 2506             95                     add A, NIBBLE
+                      96                     ;if result > 1001 0000, +0110 0000
+004D D4               97                     da A
+                      98     
+                      99                     ;combine nibbles
+004E 2507            100                     add A, RESULT
+0050 F507            101                     mov RESULT, A
+                     102     
+0052 D006            103                     pop NIBBLE
+0054 D002            104                     pop OPERAND_2
+0056 D000            105                     pop OPERAND_1
+0058 22              106                     ret
+                     107     
+                     108     ;receives: OPERAND_1 as minuend and OPERAND_2 as subtrahend
+                     109     ;stores: in RESULT
+                     110     ;uses: NIBBLE
+0059                 111     SUB_BCD:
+0059 C000            112                     push OPERAND_1
+005B C002            113                     push OPERAND_2
+005D C006            114                     push NIBBLE
+005F C3              115                     clr C
+0060 C2D6            116                     clr AC
+                     117                     
+                     118                     ;split low nibbles off, mask upper
+0062 E502            119                     mov A, OPERAND_2
+0064 540F            120                     anl A, #0FH
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/30/2022 08:02:31 PAGE     3
 
-0075 22              123                     ret
-                     124     
-                     125     ;receives: OPERAND_1 and adds it to itself MULTIPLIER times
-                     126     ;stores: in RESULT
-                     127     ;uses: OPERAND_2, NIBBLE
-0076                 128     MUL_BCD:
-0076 C006            129                     push NIBBLE
-0078 C002            130                     push OPERAND_2
-007A 750200          131                     mov OPERAND_2, #0
-007D 750700          132                     mov RESULT, #0
-0080                 133     LOOP_MUL:
-0080 E507            134                     mov A, RESULT
-0082 F502            135                     mov OPERAND_2, A
-0084 112F            136                     acall ADD_BCD
-0086 D505F7          137                     djnz MULTIPLIER, LOOP_MUL
-0089 D002            138                     pop OPERAND_2
-008B D006            139                     pop NIBBLE
-008D 22              140                     ret
-                     141     
-008E                 142     CONVERT_BCD:
-                     143                     ;split high/low
-                     144                     ;swap high to low
-                     145                     ;use high as multipler for MUL_BCD
-008E C4              146                     swap A
-008F F505            147                     mov MULTIPLIER, A
-0091 53050F          148                     anl MULTIPLIER, #0FH
-                     149                     
-                     150                     ;push low nibble aside
-0094 C4              151                     swap A
-0095 540F            152                     anl A, #0FH
-0097 F507            153                     mov RESULT, A
-0099 C007            154                     push RESULT
+0066 F506            121                     mov NIBBLE, A
+0068 E500            122                     mov A, OPERAND_1
+006A 540F            123                     anl A, #0FH
+                     124                     
+                     125                     ;subtract nibbles, triggers carry if borrow, mask upper
+006C 9506            126                     subb A, NIBBLE
+006E 540F            127                     anl A, #0FH
+                     128                     
+                     129                     ;if borrowing, subtract 0110, includes borrow
+0070 5005            130                     jnc SKIP
+0072 9405            131                     subb A, #0101B  ;5 + CY
+0074 D2D6            132                     setb AC                 ;let next nibble know to borrow
+0076 D3              133                     setb C
+                     134     
+                     135                     ;set aside lower
+0077 F507            136     SKIP:   mov RESULT, A
+                     137     
+                     138                     ;split high nibbles off, mask lower
+0079 E502            139                     mov A, OPERAND_2
+007B 54F0            140                     anl A, #0F0H
+007D C4              141                     swap A
+007E F506            142                     mov NIBBLE, A
+0080 E500            143                     mov A, OPERAND_1
+0082 54F0            144                     anl A, #0F0H
+0084 C4              145                     swap A
+                     146                     
+                     147                     ;subtract nibbles w/ lower borrow, triggers carry if new borrow, mask lower
+0085 9506            148                     subb A, NIBBLE
+0087 540F            149                     anl A, #0FH
+                     150                     
+                     151                     ;if borrowing, subtract 0110, inclues borrow, set AC
+0089 5004            152                     jnc SKIP_2
+008B 9405            153                     subb A, #0101B  ;5 + CY
+008D D2D6            154                     setb AC
                      155                     
-                     156                     ;MUL_BCD 16 X high nibble
-009B 750016          157                     mov OPERAND_1, #16H
-009E 750200          158                     mov OPERAND_2, #00H
-00A1 E4              159                     clr A
-00A2 1176            160                     acall MUL_BCD
-                     161                     
-                     162                     ;pop low nibble back,
-                     163                     ;adjust nibble
-                     164                     ;ADD_BCD low and converted
-00A4 D006            165                     pop NIBBLE
-00A6 E506            166                     mov A, NIBBLE
-00A8 D4              167                     da A
-00A9 F502            168                     mov OPERAND_2, A
-00AB 850700          169                     mov OPERAND_1, RESULT
-00AE 112F            170                     acall ADD_BCD
-                     171                     
-                     172                     ;print result
-00B0 22              173                     ret
-                     174     
-                     175     end
-A51 MACRO ASSEMBLER  LAB2_2                                                               09/28/2022 16:18:19 PAGE     4
+                     156                     ;combine nibbles
+008F C4              157     SKIP_2: swap A
+0090 4507            158                     orl A, RESULT
+0092 F507            159                     mov RESULT, A
+                     160     
+0094 D006            161                     pop NIBBLE
+0096 D002            162                     pop OPERAND_2
+0098 D000            163                     pop OPERAND_1
+009A 22              164                     ret
+                     165     
+                     166     ;loop to divide, subtract OPERAND_1 as dividend,
+                     167     ;compare RESULT of subtracting, if success result>0,
+                     168     ;increment quotient, try again, if fail result<0,
+                     169     ;break loop
+009B                 170     DIV_BCD:
+009B C000            171                     push OPERAND_1  ;dividend
+009D C002            172                     push OPERAND_2  ;divisor
+009F C007            173                     push RESULT
+                     174                     
+                     175                     ;this is for the remainder
+                     176                     ;when dividend < divisor
+00A1 850007          177                     mov RESULT, OPERAND_1
+00A4 C2D6            178                     clr AC
+00A6 C3              179                     clr C
+                     180     
+                     181                     ;subtract until less than zero,
+00A7 750300          182                     mov QUOTIENT, #0
+00AA C007            183     DIV_LP: push RESULT             ;store for remainder
+00AC 1159            184                     acall SUB_BCD
+00AE D004            185                     pop REMAINDER   ;update remainder
+                     186                     
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/30/2022 08:02:31 PAGE     4
+
+                     187                     ;break when AC set
+00B0 850700          188                     mov OPERAND_1, RESULT   ;result of subtr NOT quotient
+00B3 10D604          189                     jbc AC, BREAK
+                     190                     
+                     191                     ;if successful subtraction branch
+00B6 0503            192                     inc QUOTIENT
+00B8 80F0            193                     sjmp DIV_LP
+                     194                     
+                     195                     ;find remainder by BCD_SUB
+                     196                     ;last result from zero
+00BA D007            197     BREAK:  pop RESULT
+00BC D002            198                     pop OPERAND_2
+00BE D000            199                     pop OPERAND_1
+00C0 22              200                     ret
+                     201     
+                     202     ;receives: OPERAND_1 and adds it to itself MULTIPLIER times
+                     203     ;stores: in RESULT
+                     204     ;uses: OPERAND_2, NIBBLE
+00C1                 205     MUL_BCD:
+00C1 C006            206                     push NIBBLE
+00C3 C002            207                     push OPERAND_2
+00C5 750200          208                     mov OPERAND_2, #0
+00C8 750700          209                     mov RESULT, #0
+00CB                 210     LOOP_MUL:
+00CB E507            211                     mov A, RESULT
+00CD F502            212                     mov OPERAND_2, A
+00CF 112C            213                     acall ADD_BCD
+00D1 D505F7          214                     djnz MULTIPLIER, LOOP_MUL
+00D4 D002            215                     pop OPERAND_2
+00D6 D006            216                     pop NIBBLE
+00D8 22              217                     ret
+                     218     
+00D9                 219     CONVERT_BCD:
+                     220                     ;split high/low
+                     221                     ;swap high to low
+                     222                     ;use high as multipler for MUL_BCD
+00D9 C4              223                     swap A
+00DA F505            224                     mov MULTIPLIER, A
+00DC 53050F          225                     anl MULTIPLIER, #0FH
+                     226                     
+                     227                     ;push low nibble aside
+00DF C4              228                     swap A
+00E0 540F            229                     anl A, #0FH
+00E2 F507            230                     mov RESULT, A
+00E4 C007            231                     push RESULT
+                     232                     
+                     233                     ;MUL_BCD 16 X high nibble
+00E6 750016          234                     mov OPERAND_1, #16H
+00E9 750200          235                     mov OPERAND_2, #00H
+00EC E4              236                     clr A
+00ED 11C1            237                     acall MUL_BCD
+                     238                     
+                     239                     ;pop low nibble back,
+                     240                     ;adjust nibble
+                     241                     ;ADD_BCD low and converted
+00EF D006            242                     pop NIBBLE
+00F1 E506            243                     mov A, NIBBLE
+00F3 D4              244                     da A
+00F4 F502            245                     mov OPERAND_2, A
+00F6 850700          246                     mov OPERAND_1, RESULT
+00F9 112C            247                     acall ADD_BCD
+                     248                     
+                     249                     ;print result
+00FB 22              250                     ret
+                     251     
+00FC                 252     CONVERT_HEX:
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/30/2022 08:02:31 PAGE     5
+
+00FC C000            253                     push OPERAND_1
+00FE C002            254                     push OPERAND_2
+                     255                     
+0100 750216          256                     mov OPERAND_2, #16H
+0103 119B            257                     acall DIV_BCD
+0105 850406          258                     mov NIBBLE, REMAINDER
+                     259                     
+0108 850300          260                     mov OPERAND_1, QUOTIENT
+010B 119B            261                     acall DIV_BCD
+010D E504            262                     mov A, REMAINDER
+                     263                     
+010F C4              264                     swap A
+0110 4506            265                     orl A, NIBBLE
+0112 F507            266                     mov RESULT, A
+                     267                     
+0114 D002            268                     pop OPERAND_2
+0116 D000            269                     pop OPERAND_1
+0118 22              270                     ret
+                     271     
+                     272     end
+A51 MACRO ASSEMBLER  LAB2_2                                                               09/30/2022 08:02:31 PAGE     6
 
 SYMBOL TABLE LISTING
 ------ ----- -------
@@ -196,24 +299,34 @@ SYMBOL TABLE LISTING
 
 N A M E             T Y P E  V A L U E   ATTRIBUTES
 
-ADD_BCD. . . . . .  C ADDR   002FH   A   
-BEGIN. . . . . . .  C ADDR   0008H   A   
-CONVERT_BCD. . . .  C ADDR   008EH   A   
-DIVISOR. . . . . .  N NUMB   0004H   A   
-DIV_BCD. . . . . .  C ADDR   0070H   A   
-HERE . . . . . . .  C ADDR   002DH   A   
-LOOP_MUL . . . . .  C ADDR   0080H   A   
+AC . . . . . . . .  B ADDR   00D0H.6 A   
+ADD_BCD. . . . . .  C ADDR   002CH   A   
+BREAK. . . . . . .  C ADDR   00BAH   A   
+CONVERT_BCD. . . .  C ADDR   00D9H   A   
+CONVERT_HEX. . . .  C ADDR   00FCH   A   
+DIV_BCD. . . . . .  C ADDR   009BH   A   
+DIV_LP . . . . . .  C ADDR   00AAH   A   
+HERE . . . . . . .  C ADDR   002AH   A   
+LOOP_MUL . . . . .  C ADDR   00CBH   A   
+LP_TWO . . . . . .  C ADDR   001BH   A   
 MULTIPLIER . . . .  N NUMB   0005H   A   
-MUL_BCD. . . . . .  C ADDR   0076H   A   
-MYDATA . . . . . .  C ADDR   0300H   A   
+MUL_BCD. . . . . .  C ADDR   00C1H   A   
+MYAVG. . . . . . .  C ADDR   0180H   A   
+MYBCD. . . . . . .  C ADDR   0150H   A   
+MYDATA . . . . . .  C ADDR   0120H   A   
 NIBBLE . . . . . .  N NUMB   0006H   A   
 OPERAND_1. . . . .  N NUMB   0000H   A   
 OPERAND_2. . . . .  N NUMB   0002H   A   
+PART_ONE . . . . .  C ADDR   0008H   A   
+PART_THREE . . . .  C ADDR   002AH   A   
+PART_TWO . . . . .  C ADDR   0015H   A   
 QUOTIENT . . . . .  N NUMB   0003H   A   
 RAM. . . . . . . .  N NUMB   0001H   A   
+REMAINDER. . . . .  N NUMB   0004H   A   
 RESULT . . . . . .  N NUMB   0007H   A   
-SKIP . . . . . . .  C ADDR   0067H   A   
-SUB_BCD. . . . . .  C ADDR   0058H   A   
+SKIP . . . . . . .  C ADDR   0077H   A   
+SKIP_2 . . . . . .  C ADDR   008FH   A   
+SUB_BCD. . . . . .  C ADDR   0059H   A   
 
 
 REGISTER BANK(S) USED: 0 
